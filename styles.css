@@ -1,0 +1,74 @@
+:root {
+  --background: #002b36;
+  --foreground: #93a1a1;
+  --user-text-color: #d79921;
+  --separator-text-color: #a89984;
+  --domain-text-color: #98971a;
+}
+
+body {
+  margin: 0;
+  padding: 8px;
+  background-color: var(--background);
+
+  font-family: Hack, monospace;
+  font-size: 16px;
+  font-weight: bold;
+  line-height: 1.5;
+  color: var(--foreground);
+
+  p {
+    margin: 0;
+  }
+}
+
+main {
+  height: 100vh;
+
+  #command-list {
+    display: flex;
+    flex-direction: column;
+  }
+
+  .command-row {
+    display: flex;
+    flex-direction: row;
+  }
+
+  .host-text {
+    display: flex;
+
+    .user-text {
+      color: var(--user-text-color);
+    }
+
+    .separator {
+      color: var(--separator-text-color);
+    }
+
+    .domain-text {
+      color: var(--domain-text-color);
+    }
+  }
+
+  .input-container {
+    display: flex;
+    width: 100%;
+    margin-left: 8px;
+
+    #command-input {
+      font-family: Hack, monospace;
+      font-size: 16px;
+      font-weight: bold;
+      line-height: 1.5;
+      color: var(--foreground);
+
+      width: 100%;
+      padding: 0;
+      border: none;
+      background-color: transparent;
+      outline: 2px solid transparent;
+      outline-offset: 2px;
+    }
+  }
+}
