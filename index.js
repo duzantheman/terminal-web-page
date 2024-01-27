@@ -4,36 +4,44 @@
  * [x] move js to separate file
  * [x] clean up javascript (reuse stuff)
  * [x] clean up css
- * [] handle output of commands
- * [] show output of commands on page reload
+ * [x] handle output of commands
+ * [x] show output of commands on page reload
+ * [x] press up arrow to cycle through command history
+ * [] add border to whole window
+ * [x] add remaining commands
+ * [] add loading animation for commands that take a while
+ * [] autocomplete commands
  * [] figure out any cool commands to add
+ * [] add command highlighting (turn green if valid)
  * [] add an easter egg command 🥚
+ * [] add the "ah ah ah" from Jurassic Park when you try to access a secure file/folder
+ *    - not sure how to do this, maybe a gif and some audio?
  * [] build a fake file structure that can be navigated (probably using nested arrays)
- * [] add "last login" message on page load (see Mac terminal app for example)
+ * [x] add "last login" message on page load (see Mac terminal app for example)
  * [] add page load animation (dial up tone and ASCII animation of connection)
+ * [] change color themes (provide a list of themes to choose from)
  */
 
-// terminal color schemes
-//
-// solarized dark
-// background: #002b36
-// foreground: #839496
-// black:      #073642
-// red:        #dc322f
-// green:      #859900
-// yellow:     #b58900
-// blue:       #268bd2
-// magenta:    #d33682
-// cyan:       #2aa198
-// white:      #eee8d5
-// brightblack:    #002b36
-// brightred:      #cb4b16
-// brightgreen:    #586e75
-// brightyellow:   #657b83
-// brightblue:     #839496
-// brightmagenta:  #6c71c4
-// brightcyan:     #93a1a1
-// brightwhite:    #fdf6e3
+// --- CONSTANTS ---
+
+const HOSTNAME = "term.chrisduzan.com";
+const USERNAME = "guest";
+const VALID_COMMANDS = [
+  "help",
+  "hostname",
+  "whoami",
+  "date",
+  "echo",
+  "repo",
+  "resume",
+  "email",
+  "weather",
+  "banner",
+  "curl",
+  "clear",
+];
+
+// --- FUNCTIONS ---
 
 const createCommandRowElement = (command) => {
   const commandRow = document.createElement("div");
@@ -47,7 +55,7 @@ const createCommandRowElement = (command) => {
 
   const userText = document.createElement("span");
   userText.className = "user-text";
-  userText.textContent = "guest";
+  userText.textContent = USERNAME;
 
   const atText = document.createElement("span");
   atText.className = "separator";
@@ -55,7 +63,7 @@ const createCommandRowElement = (command) => {
 
   const domainText = document.createElement("span");
   domainText.className = "domain-text";
-  domainText.textContent = "term.chrisduzan.com";
+  domainText.textContent = HOSTNAME;
 
   const separator = document.createElement("span");
   separator.className = "separator";
@@ -70,14 +78,12 @@ const createCommandRowElement = (command) => {
   inputContainer.className = "input-container";
 
   if (command) {
-    console.log('add command')
     // add command
     const userCommand = document.createElement("p");
     userCommand.textContent = command;
 
     inputContainer.appendChild(userCommand);
   } else {
-    console.log('add input')
     // add command input
     const input = document.createElement("input");
     input.id = "command-input";
@@ -94,70 +100,208 @@ const createCommandRowElement = (command) => {
   return commandRow;
 }
 
-const runCommand = (command) => {
-  switch (command) {
+const runCommand = async ([command, ...args], firstLoad = false) => {
+  console.log('runCommand', command, args, firstLoad)
+  switch (command.toLowerCase().trim()) {
     case "help":
-      return "help";
-    case "ls":
-      return "ls";
-    case "cd":
-      return "cd";
-    case "pwd":
-      return "pwd";
+      return `Available commands: ${VALID_COMMANDS.join(", ")}`;
+    case "banner":
+      return `
+██╗  ██╗███████╗██╗     ██╗      ██████╗     ██╗    ██╗ ██████╗ ██████╗ ██╗     ██████╗ ██╗
+██║  ██║██╔════╝██║     ██║     ██╔═══██╗    ██║    ██║██╔═══██╗██╔══██╗██║     ██╔══██╗██║
+███████║█████╗  ██║     ██║     ██║   ██║    ██║ █╗ ██║██║   ██║██████╔╝██║     ██║  ██║██║
+██╔══██║██╔══╝  ██║     ██║     ██║   ██║    ██║███╗██║██║   ██║██╔══██╗██║     ██║  ██║╚═╝
+██║  ██║███████╗███████╗███████╗╚██████╔╝    ╚███╔███╔╝╚██████╔╝██║  ██║███████╗██████╔╝██╗
+╚═╝  ╚═╝╚══════╝╚══════╝╚══════╝ ╚═════╝      ╚══╝╚══╝  ╚═════╝ ╚═╝  ╚═╝╚══════╝╚═════╝ ╚═╝
+
+Type 'help' to see list of available commands.
+      `
+    case "hostname":
+      return HOSTNAME;
+    case "whoami":
+      return USERNAME;
+    case "date":
+      return new Date().toLocaleString();
+    case "echo":
+      return args.join(" ");
+    case "repo":
+      if (!firstLoad) {
+        window.open('https://github.com/duzantheman/terminal-web-page', '_blank');
+      }
+      return 'Opening repo...'
+    case "resume":
+      if (!firstLoad) {
+        window.open('https://standardresume.co/r/QJ_hCYRLyUAn3zHJmXCYV', '_blank');
+      }
+      return 'Opening resume...'
+    case "email":
+      if (!firstLoad) {
+        window.open('mailto:cgduzan@gmail.com?subject=Hey%20Chris%20👋', '_blank');
+      }
+      return 'Opening mailto:cgduzan@gmail.com...'
+    case "weather":
+      return (await fetch(`https://wttr.in/${args.join(' ')}?AT`)).text()
+    case "curl":
+      return (await fetch(args.join(' '))).text()
     case "clear":
-      return "clear";
-    case "exit":
-      return "exit";
+      localStorage.removeItem('commandHistory');
+      commandHistory = [];
+      const commandList = document.getElementById("command-list");
+      while (commandList.firstChild && commandList.firstChild.id !== "command-input-container") {
+        commandList.removeChild(commandList.firstChild);
+      }
+      return
+    // TODO - navigation commands (ls, cd, pwd)?
+    // case "help":
+    //   return "help";
+    // case "ls":
+    //   return "ls";
+    // case "cd":
+    //   return "cd";
+    // case "pwd":
+    //   return "pwd";
     default:
       return "command not found";
   }
 }
 
-// load command history from local storage
-let commandHistory = JSON.parse(localStorage.getItem('commandHistory') || '[]');
+// --- MAIN ---
 
-// add command history elements
-const commandList = document.getElementById("command-list");
-commandHistory.forEach(command => {
-  commandList.appendChild(createCommandRowElement(command));
-})
+const run = async () => {
 
-// add command input element
-commandList.appendChild(createCommandRowElement());
+  const commandList = document.getElementById("command-list");
 
-// add listener on command-input element
-const commandInputContainer = document.getElementById("command-input-container");
-const commandInput = document.getElementById("command-input");
-commandInput.addEventListener("keyup", function (event) {
-  // Enter key
-  if (event.keyCode === 13) {
-    // Cancel the default action, if needed
-    event.preventDefault();
-
-    // Add command to command history
-    commandHistory.push(commandInput.value);
-    localStorage.setItem('commandHistory', JSON.stringify(commandHistory));
-
-    // Create new command element
-    const commandElement = createCommandRowElement(commandInput.value);
-
-    // insert commandElement before commandInput
-    commandList.insertBefore(commandElement, commandInputContainer);
-
-    // Clear command input
-    commandInput.value = '';
-
-    // Run command
-    const commandOutput = runCommand(commandInput.value);
-    // TODO - print command output
-
-    // Scroll to bottom of page
-    window.scrollTo(0, document.body.scrollHeight);
+  // print login time
+  const loginTime = localStorage.getItem('loginTime');
+  if (loginTime) {
+    const loginTimeElement = document.createElement("p");
+    loginTimeElement.textContent = `Last login: ${loginTime}`;
+    commandList.appendChild(loginTimeElement);
   }
-});
 
-// keep focus on command input
-commandInput.focus();
-window.addEventListener('click', function () {
+  // write login time to local storage
+  localStorage.setItem('loginTime', new Date().toLocaleString());
+
+  // load command history from local storage
+  let commandHistory = JSON.parse(localStorage.getItem('commandHistory') || '[]');
+
+  // add command history elements
+  for (const command of commandHistory) {
+    commandList.appendChild(createCommandRowElement(command));
+
+    const commandOutput = await runCommand(command.split(' '), true);
+    if (commandOutput) {
+      // Create new command output element
+      const commandOutputElement = document.createElement("p");
+      commandOutputElement.textContent = commandOutput;
+
+      commandList.appendChild(commandOutputElement);
+    }
+  }
+
+  // add command input element
+  commandList.appendChild(createCommandRowElement());
+
+  // add listener on command-input element
+  const commandInputContainer = document.getElementById("command-input-container");
+  const commandInput = document.getElementById("command-input");
+  let commandHistoryIndex = commandHistory.length - 1;
+  commandInput.addEventListener("keyup", async function (event) {
+    // Enter key
+    if (event.key === 'Enter') {
+      // Cancel the default action, if needed
+      event.preventDefault();
+
+      const commandValue = commandInput.value.trim();
+      if (!commandValue) return
+
+      // Clear command input
+      commandInput.value = '';
+
+      // Add command to command history
+      commandHistory.push(commandValue);
+      localStorage.setItem('commandHistory', JSON.stringify(commandHistory));
+
+      // Create new command element
+      const commandElement = createCommandRowElement(commandValue);
+
+      // insert commandElement before commandInput
+      commandList.insertBefore(commandElement, commandInputContainer);
+
+      // Run command
+      const commandOutput = await runCommand(commandValue.split(' '));
+      if (commandOutput) {
+        if (commandOutput.startsWith('<html>')) {
+          commandInputContainer.insertAdjacentHTML('beforebegin', commandOutput);
+        } else {
+          // Create new command output element
+          const commandOutputElement = document.createElement("p");
+          commandOutputElement.textContent = commandOutput;
+
+          // insert commandOutputElement before commandInput
+          commandList.insertBefore(commandOutputElement, commandInputContainer);
+        }
+      }
+
+      // Update command history index
+      commandHistoryIndex = commandHistory.length - 1;
+
+      // Scroll to bottom of page
+      window.scrollTo(0, document.body.scrollHeight);
+    }
+
+    // up arrow key
+    if (event.key === 'ArrowUp') {
+      // Cancel the default action, if needed
+      event.preventDefault();
+
+      // update command input value
+      commandInput.value = commandHistory[commandHistoryIndex];
+      commandHistoryIndex = Math.max(commandHistoryIndex - 1, 0);
+
+      // move cursor to end of input
+      commandInput.setSelectionRange(commandInput.value.length, commandInput.value.length);
+    }
+
+    // down arrow key
+    if (event.key === 'ArrowDown') {
+      // Cancel the default action, if needed
+      event.preventDefault();
+
+      // update command input value
+      commandInput.value = commandHistory[commandHistoryIndex];
+      commandHistoryIndex = Math.min(commandHistoryIndex + 1, commandHistory.length - 1);
+
+      // move cursor to end of input
+      commandInput.setSelectionRange(commandInput.value.length, commandInput.value.length);
+    }
+
+    // control + c
+    if (event.ctrlKey && event.key === 'c') {
+      // Cancel the default action, if needed
+      event.preventDefault();
+
+      // Clear command input
+      commandInput.value = '';
+
+      // reset command history index
+      commandHistoryIndex = commandHistory.length - 1;
+    }
+
+    // TODO - can we do some autocomplete stuff?
+    // // key is a letter or number
+    // if (event.key.match(/[a-z0-9]/i)) {
+    //   // see if command matches any valid commands
+    //   const matchingCommands = commandHistory.filter(command => command.startsWith(commandInput.value));
+    //   console.log(matchingCommands);
+    // }
+  });
+
+  // keep focus on command input
   commandInput.focus();
-});
+  window.addEventListener('click', function () {
+    commandInput.focus();
+  });
+}
+
+run();
