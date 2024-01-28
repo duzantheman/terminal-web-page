@@ -1,15 +1,20 @@
 :root {
   --background: #002b36;
+  --border-color: #859900;
   --foreground: #93a1a1;
   --user-text-color: #d79921;
   --separator-text-color: #a89984;
   --domain-text-color: #98971a;
 }
 
+* {
+  box-sizing: border-box;
+}
+
 body {
+  height: 100vh;
   margin: 0;
-  padding: 16px;
-  background-color: var(--background);
+  background-color: black;
 
   font-family: Hack, monospace;
   font-size: 16px;
@@ -23,53 +28,63 @@ body {
   }
 }
 
-main {
+.outer {
   height: 100vh;
+  padding: 16px;
 
-  #command-list {
-    display: flex;
-    flex-direction: column;
-  }
+  main {
+    height: 100%;
+    overflow: auto;
+    padding: 16px;
+    background-color: var(--background);
+    border: 2px solid var(--border-color);
+    border-radius: 4px;
 
-  .command-row {
-    display: flex;
-    flex-direction: row;
-  }
-
-  .host-text {
-    display: flex;
-
-    .user-text {
-      color: var(--user-text-color);
+    #command-list {
+      display: flex;
+      flex-direction: column;
     }
 
-    .separator {
-      color: var(--separator-text-color);
+    .command-row {
+      display: flex;
+      flex-direction: row;
     }
 
-    .domain-text {
-      color: var(--domain-text-color);
+    .host-text {
+      display: flex;
+
+      .user-text {
+        color: var(--user-text-color);
+      }
+
+      .separator {
+        color: var(--separator-text-color);
+      }
+
+      .domain-text {
+        color: var(--domain-text-color);
+      }
     }
-  }
 
-  .input-container {
-    display: flex;
-    width: 100%;
-    margin-left: 8px;
-
-    #command-input {
-      font-family: Hack, monospace;
-      font-size: 16px;
-      font-weight: 400;
-      line-height: 1.5;
-      color: var(--foreground);
-
+    .input-container {
+      display: flex;
       width: 100%;
-      padding: 0;
-      border: none;
-      background-color: transparent;
-      outline: 2px solid transparent;
-      outline-offset: 2px;
+      margin-left: 8px;
+
+      #command-input {
+        font-family: Hack, monospace;
+        font-size: 16px;
+        font-weight: 400;
+        line-height: 1.5;
+        color: var(--foreground);
+
+        width: 100%;
+        padding: 0;
+        border: none;
+        background-color: transparent;
+        outline: 2px solid transparent;
+        outline-offset: 2px;
+      }
     }
   }
 }

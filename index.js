@@ -9,6 +9,7 @@
  * [x] press up arrow to cycle through command history
  * [] add border to whole window
  * [x] add remaining commands
+ * [] add footer - "Built with {} and hosted on {}" - can we pass these in using env variables?
  * [] add loading animation for commands that take a while
  * [] autocomplete commands
  * [] figure out any cool commands to add
@@ -101,7 +102,6 @@ const createCommandRowElement = (command) => {
 }
 
 const runCommand = async ([command, ...args], firstLoad = false) => {
-  console.log('runCommand', command, args, firstLoad)
   switch (command.toLowerCase().trim()) {
     case "help":
       return `Available commands: ${VALID_COMMANDS.join(", ")}`;
@@ -142,10 +142,13 @@ Type 'help' to see list of available commands.
     case "weather":
       return (await fetch(`https://wttr.in/${args.join(' ')}?AT`)).text()
     case "curl":
+      if (!args.length) return 'curl: no URL specified'
+
       return (await fetch(args.join(' '))).text()
     case "clear":
       localStorage.removeItem('commandHistory');
       commandHistory = [];
+      commandHistoryIndex = 0;
       const commandList = document.getElementById("command-list");
       while (commandList.firstChild && commandList.firstChild.id !== "command-input-container") {
         commandList.removeChild(commandList.firstChild);
@@ -161,11 +164,19 @@ Type 'help' to see list of available commands.
     // case "pwd":
     //   return "pwd";
     default:
-      return "command not found";
+      return `command not found: ${command}`;
   }
 }
 
+const main = document.getElementById("main");
+const scrollToBottom = () => {
+  main.scrollTo(0, main.scrollHeight);
+}
+
 // --- MAIN ---
+
+let commandHistory = [];
+let commandHistoryIndex = 0;
 
 const run = async () => {
 
@@ -183,7 +194,13 @@ const run = async () => {
   localStorage.setItem('loginTime', new Date().toLocaleString());
 
   // load command history from local storage
-  let commandHistory = JSON.parse(localStorage.getItem('commandHistory') || '[]');
+  commandHistory = JSON.parse(localStorage.getItem('commandHistory') || '[]');
+  commandHistoryIndex = commandHistory.length;
+
+  if (commandHistory.length === 0) {
+    // add default commands to command history
+    commandHistory.push('banner');
+  }
 
   // add command history elements
   for (const command of commandHistory) {
@@ -205,7 +222,6 @@ const run = async () => {
   // add listener on command-input element
   const commandInputContainer = document.getElementById("command-input-container");
   const commandInput = document.getElementById("command-input");
-  let commandHistoryIndex = commandHistory.length - 1;
   commandInput.addEventListener("keyup", async function (event) {
     // Enter key
     if (event.key === 'Enter') {
@@ -221,6 +237,7 @@ const run = async () => {
       // Add command to command history
       commandHistory.push(commandValue);
       localStorage.setItem('commandHistory', JSON.stringify(commandHistory));
+      commandHistoryIndex = commandHistory.length;
 
       // Create new command element
       const commandElement = createCommandRowElement(commandValue);
@@ -231,23 +248,15 @@ const run = async () => {
       // Run command
       const commandOutput = await runCommand(commandValue.split(' '));
       if (commandOutput) {
-        if (commandOutput.startsWith('<html>')) {
-          commandInputContainer.insertAdjacentHTML('beforebegin', commandOutput);
-        } else {
-          // Create new command output element
-          const commandOutputElement = document.createElement("p");
-          commandOutputElement.textContent = commandOutput;
+        // Create new command output element
+        const commandOutputElement = document.createElement("p");
+        commandOutputElement.textContent = commandOutput;
 
-          // insert commandOutputElement before commandInput
-          commandList.insertBefore(commandOutputElement, commandInputContainer);
-        }
+        // insert commandOutputElement before commandInput
+        commandList.insertBefore(commandOutputElement, commandInputContainer);
       }
 
-      // Update command history index
-      commandHistoryIndex = commandHistory.length - 1;
-
-      // Scroll to bottom of page
-      window.scrollTo(0, document.body.scrollHeight);
+      scrollToBottom()
     }
 
     // up arrow key
@@ -255,9 +264,10 @@ const run = async () => {
       // Cancel the default action, if needed
       event.preventDefault();
 
+      if (commandHistoryIndex === 0) return
+
       // update command input value
-      commandInput.value = commandHistory[commandHistoryIndex];
-      commandHistoryIndex = Math.max(commandHistoryIndex - 1, 0);
+      commandInput.value = commandHistory[--commandHistoryIndex];
 
       // move cursor to end of input
       commandInput.setSelectionRange(commandInput.value.length, commandInput.value.length);
@@ -268,9 +278,10 @@ const run = async () => {
       // Cancel the default action, if needed
       event.preventDefault();
 
+      if (commandHistoryIndex === commandHistory.length) return
+
       // update command input value
-      commandInput.value = commandHistory[commandHistoryIndex];
-      commandHistoryIndex = Math.min(commandHistoryIndex + 1, commandHistory.length - 1);
+      commandInput.value = commandHistory[++commandHistoryIndex] || '';
 
       // move cursor to end of input
       commandInput.setSelectionRange(commandInput.value.length, commandInput.value.length);
@@ -285,7 +296,7 @@ const run = async () => {
       commandInput.value = '';
 
       // reset command history index
-      commandHistoryIndex = commandHistory.length - 1;
+      commandHistoryIndex = commandHistory.length;
     }
 
     // TODO - can we do some autocomplete stuff?
