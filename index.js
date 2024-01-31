@@ -7,13 +7,15 @@
  * [x] handle output of commands
  * [x] show output of commands on page reload
  * [x] press up arrow to cycle through command history
- * [] add border to whole window
+ * [x] add border to whole window
  * [x] add remaining commands
+ * [x] responsive design
+ * [] fix cursor jumping when pressing up arrow
  * [] add footer - "Built with {} and hosted on {}" - can we pass these in using env variables?
  * [] add loading animation for commands that take a while
  * [] autocomplete commands
  * [] figure out any cool commands to add
- * [] add command highlighting (turn green if valid)
+ * [] add command highlighting (turn green if valid) - utilize <div contenteditable>?
  * [] add an easter egg command 🥚
  * [] add the "ah ah ah" from Jurassic Park when you try to access a secure file/folder
  *    - not sure how to do this, maybe a gif and some audio?
@@ -77,6 +79,13 @@ const createCommandRowElement = (command) => {
 
   const inputContainer = document.createElement("div");
   inputContainer.className = "input-container";
+
+  // add mobile-only indicator (>)
+  const mobileIndicator = document.createElement("span");
+  mobileIndicator.className = "mobile-indicator";
+  mobileIndicator.textContent = "❯";
+
+  inputContainer.appendChild(mobileIndicator);
 
   if (command) {
     // add command
